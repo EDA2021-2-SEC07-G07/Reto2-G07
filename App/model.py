@@ -25,6 +25,7 @@
  """
 
 
+from DISClib.DataStructures.chaininghashtable import valueSet
 import config as cf
 from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
@@ -53,15 +54,38 @@ def newCatalog():
 
     Retorna el catalogo inicializado.
     """
-    catalog = {'books': None,'Medios': None}
+    catalog = {'books': None,'Medios': None,'Artistas':None,'years':None,'Nacionalidad_autores':None}
 
     catalog['books'] = lt.newList('SINGLE_LINKED', compareBookIds)
 
-    catalog['Medios'] = mp.newMap(1000,
-                                 maptype='CHAINING',
-                                 loadfactor=4.0,
-                                 comparefunction=compareAuthorsByName)
+    catalog['Artistas'] = mp.newMap(2000,
+                                   maptype='PROBING',
+                                   loadfactor=0.5, 
+                                   comparefunction=compareAuthorsByName)
 
+    catalog['Medios'] = mp.newMap(1000,
+                                 maptype='PROBING',
+                                 loadfactor=0.8,
+                                 comparefunction=compareAuthorsByName)
+                                
+    catalog['years'] = mp.newMap(15000,
+                                 maptype='PROBING',
+                                 loadfactor=0.5,
+                                 comparefunction=compareMapYear)
+
+    catalog['Nacionalidad_autores'] = mp.newMap(15000,
+                                 maptype='PROBING',
+                                 loadfactor=0.5,
+                                 comparefunction=compareMapYear)
+
+    catalog['Codigos_Artistas'] = mp.newMap(150000,
+                                   maptype='CHAINING',
+                                   loadfactor=4.0,
+                                   comparefunction=compareAuthorsByName)
+    catalog['Nacionalidad'] = mp.newMap(150000,
+                                   maptype='PROBING',
+                                   loadfactor=0.8,
+                                   comparefunction=compareAuthorsByName)
     return catalog
 
 # Funciones para agregar informacion al catalogo
@@ -76,11 +100,35 @@ def addBook(catalog, book):
     libro fue publicaco en ese año.
     """
     lt.addLast(catalog['books'], book)
+
+    artistas = book['ConstituentID'].replace("[","")
+    artistas = artistas.replace("]","")
+    artistas = artistas.split(",")
+
+    for codigo in artistas:
+        addBookAuthor(catalog, codigo.strip(), book)
+
     authors = book['Medium'].split(",")  # Se obtienen los autores
     for author in authors:
-        addBookAuthor(catalog, author.strip(), book)
+        addMedio(catalog, author.strip(), book)
 
 def addBookAuthor(catalog, authorname, book):
+    """
+    Esta función adiciona un libro a la lista de libros publicados
+    por un autor.
+    Cuando se adiciona el libro se actualiza el promedio de dicho autor
+    """
+    authors = catalog['Codigos_Artistas']
+    existauthor = mp.contains(authors, authorname)
+    if existauthor:
+        entry = mp.get(authors, authorname)
+        author = me.getValue(entry)
+    else:
+        author = newAaRTISTA(authorname)
+        mp.put(authors, authorname, author)
+    lt.addLast(author['obras'], book)
+
+def addMedio(catalog, authorname, book):
     """
     Esta función adiciona un libro a la lista de libros publicados
     por un autor.
@@ -96,6 +144,84 @@ def addBookAuthor(catalog, authorname, book):
         mp.put(authors, authorname, author)
     lt.addLast(author['obras'], book)
 
+def addArtista(catalog,book):
+    """
+    Esta función adiciona un libro a la lista de libros publicados
+    por un autor.
+    Cuando se adiciona el libro se actualiza el promedio de dicho autor
+    """
+
+    addcodigoautor(catalog, book['DisplayName'].strip(), book)
+    addcnacioanlidadautores(catalog, book['Nationality'].strip(), book)
+    addBookYear(catalog, book)
+
+def addBookYear(catalog, book):
+    """
+    Esta funcion adiciona un libro a la lista de libros que
+    fueron publicados en un año especifico.
+    Los años se guardan en un Map, donde la llave es el año
+    y el valor la lista de libros de ese año.
+    """
+    try:
+        years = catalog['years']
+        if (book['BeginDate'] != ''):
+            pubyear = book['BeginDate']
+            pubyear = int(float(pubyear))
+        else:
+            pubyear = 2020
+        existyear = mp.contains(years, pubyear)
+        if existyear:
+            entry = mp.get(years, pubyear)
+            year = me.getValue(entry)
+        else:
+            year = newYear(pubyear)
+            mp.put(years, pubyear, year)
+        lt.addLast(year['books'], book)
+    except Exception:
+        return None
+
+def addcodigoautor(catalog, authorname, book):
+    """
+    Esta función adiciona un libro a la lista de libros publicados
+    por un autor.
+    Cuando se adiciona el libro se actualiza el promedio de dicho autor
+    """
+    authors = catalog['Artistas']
+    existauthor = mp.contains(authors, authorname)
+    if existauthor:
+        entry = mp.get(authors, authorname)
+        author = me.getValue(entry)
+    else:
+        author = newAuthor(authorname)
+        mp.put(authors, authorname, author)
+    lt.addLast(author['obras'], book)
+
+def addcnacioanlidadautores(catalog, authorname, book):
+    """
+    Esta función adiciona un libro a la lista de libros publicados
+    por un autor.
+    Cuando se adiciona el libro se actualiza el promedio de dicho autor
+    """
+    authors = catalog['Nacionalidad_autores']
+    existauthor = mp.contains(authors, authorname)
+    if existauthor:
+        entry = mp.get(authors, authorname)
+        author = me.getValue(entry)
+    else:
+        author = newAuthor(authorname)
+        mp.put(authors, authorname, author)
+    lt.addLast(author['obras'], book)
+
+def newYear(pubyear):
+    """
+    Esta funcion crea la estructura de libros asociados
+    a un año.
+    """
+    entry = {'year': "", "books": None}
+    entry['year'] = pubyear
+    entry['books'] = lt.newList('ARRAY_LIST', compareYears)
+    return entry
+
 # Funciones para creacion de datos
 
 def newAuthor(name):
@@ -106,9 +232,22 @@ def newAuthor(name):
     """
     tecnica = {'Tecnica': "",
               "obras": None,}
-    tecnica['Tecnica'] = name
-    tecnica['obras'] = lt.newList('SINGLE_LINKED', compareAuthorsByName)
+    tecnica['nombre'] = name
+    tecnica['obras'] = lt.newList('ARRAY_LIST', compareAuthorsByName)
     return tecnica
+
+def newAaRTISTA(name):
+    """
+    Crea una nueva estructura para modelar los libros de un autor
+    y su promedio de ratings. Se crea una lista para guardar los
+    libros de dicho autor.
+    """
+    artista = {'codigo': "",
+              "obras": None,}
+    artista['codigo'] = name
+    artista['obras'] = lt.newList('ARRAY_LIST', compareAuthorsByName)
+    return artista
+
 
 # Funciones de consulta
 
@@ -121,6 +260,14 @@ def getBooksByAuthor(catalog, authorname):
         return me.getValue(author)
     return None
 
+def getBooksByYear(catalog, year):
+    """
+    Retorna los libros publicados en un año
+    """
+    year = mp.get(catalog['years'], year)
+    if year:
+        return me.getValue(year)['books']
+    return None
 
 # Funciones utilizadas para comparar elementos dentro de una lista
 
@@ -150,6 +297,18 @@ def compareBookIds(id1, id2):
 
 def compareantiguas(artista1, artista2):
     return ((artista1['Date']) < (artista2['Date']))
+
+def compareMapYear(id, tag):
+    tagentry = me.getKey(tag)
+    if (id == tagentry):
+        return 0
+    elif (id > tagentry):
+        return 1
+    else:
+        return 0
+
+def comparenacidos(artista1, artista2):
+    return ((artista1['BeginDate']) < (artista2['BeginDate']))
 # Funciones de ordenamiento
 
 def sortantiguas(catalog,size):
@@ -157,3 +316,56 @@ def sortantiguas(catalog,size):
     sub_list = sub_list.copy()
     orden = merge.sort(sub_list, compareantiguas)
     return orden
+
+def sortnacidos(catalog):
+    orden = merge.sort(catalog, comparenacidos)
+    return orden
+
+def compareYears(year1, year2):
+    if (int(year1) == int(year2)):
+        return 0
+    elif (int(year1) > int(year2)):
+        return 1
+    else:
+        return 0
+
+#completas requerimientos
+
+def primer_req(catalogo,año1,año2):
+    llaves = mp.keySet(catalogo['years'])
+    nueva = lt.newList('ARRAY_LIST')
+    for c in lt.iterator(llaves):
+            if int(c) >= int(año1) and int(c) <= int(año2):
+                valor = mp.get(catalogo['years'],c)
+                for i in lt.iterator(me.getValue(valor)['books']):
+                    lt.addLast(nueva,i)
+    orden = sortnacidos(nueva)
+    if lt.size(orden) < 6:
+        return orden
+    else: 
+        primeros = lt.subList(orden, 1, 3)
+        ultimos = lt.newList('ARRAY_LIST')
+        for cont in range(lt.size(orden)-2, lt.size(orden)+1):
+            arte = lt.getElement(orden, cont)
+            lt.addLast(ultimos, arte)
+        return primeros,ultimos
+
+def obras_nacionaloidad(catalag,nacionalidad):
+    auotres_nacionalidad = catalag['Nacionalidad_autores']
+    llaves = mp.keySet(auotres_nacionalidad)
+    for k in lt.iterator(llaves):
+        obras_total = lt.newList('ARRAY_LIST')
+        nacionalidad_especifica = mp.get(auotres_nacionalidad,k)
+        for c in lt.iterator(me.getValue(nacionalidad_especifica)['obras']):
+            obras = mp.get(catalag['Codigos_Artistas'],c['ConstituentID'])
+            lt.addLast(obras_total,obras)
+        mp.put(catalag['Nacionalidad'],k,obras_total)
+    valor = mp.get(catalag['Nacionalidad'],nacionalidad)
+    obras = me.getValue(valor)
+    conteo = 0
+    for c in lt.iterator(obras):
+            if c != None:
+                obras_cantidad = me.getValue(c)['obras']
+                conteo += lt.size(obras_cantidad)
+    return conteo
+
