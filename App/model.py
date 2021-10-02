@@ -358,14 +358,12 @@ def obras_nacionaloidad(catalag,nacionalidad):
         nacionalidad_especifica = mp.get(auotres_nacionalidad,k)
         for c in lt.iterator(me.getValue(nacionalidad_especifica)['obras']):
             obras = mp.get(catalag['Codigos_Artistas'],c['ConstituentID'])
-            lt.addLast(obras_total,obras)
+            if obras != None:
+                for j in lt.iterator(me.getValue(obras)['obras']):
+                    if j != None:
+                        lt.addLast(obras_total,j)
         mp.put(catalag['Nacionalidad'],k,obras_total)
-    valor = mp.get(catalag['Nacionalidad'],nacionalidad)
-    obras = me.getValue(valor)
-    conteo = 0
-    for c in lt.iterator(obras):
-            if c != None:
-                obras_cantidad = me.getValue(c)['obras']
-                conteo += lt.size(obras_cantidad)
-    return conteo
+    valores = mp.get(catalag['Nacionalidad'],nacionalidad)
+    medida = lt.size(me.getValue(valores))
+    return medida
 
