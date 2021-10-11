@@ -40,35 +40,33 @@ def initCatalog():
 
 # Funciones para la carga de datos
 
+def loadBooks(catalog):
+    """
+    Carga los libros del archivo.  Por cada libro se indica al
+    modelo que debe adicionarlo al catalogo.
+    """
+    booksfile = cf.data_dir + 'Moma/Artworks-utf8-small.csv'
+    input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
+    for book in input_file:
+        model.addBook(catalog, book)
+
 def loadData(catalog):
     """
     Carga los datos de los archivos y cargar los datos en la
     estructura de datos
     """
     loadBooks(catalog)
-    loadAristas(catalog)
+    loadaristas(catalog)
 
-
-def loadBooks(catalog):
+def loadaristas(catalog):
     """
     Carga los libros del archivo.  Por cada libro se indica al
     modelo que debe adicionarlo al catalogo.
     """
-    booksfile = cf.data_dir + 'Moma/Artworks-utf8-large.csv'
+    booksfile = cf.data_dir + 'Moma/Artists-utf8-small.csv'
     input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
     for book in input_file:
-        model.addBook(catalog, book)
-
-def loadAristas(catalog):
-    """
-    Carga los libros del archivo.  Por cada libro se indica al
-    modelo que debe adicionarlo al catalogo.
-    """
-    booksfile = cf.data_dir + 'Moma/Artists-utf8-large.csv'
-    input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
-    for book in input_file:
-        model.addArtistas(catalog, book)
-
+        model.addArtista(catalog, book)
 # Funciones de ordenamiento
 
 def sortantiguas(catalog,size):
@@ -76,27 +74,6 @@ def sortantiguas(catalog,size):
     Ordena los artistas por nacimiento
     """
     orden = model.sortantiguas(catalog,size)
-    return orden
-
-def sortCantidades(catalog):
-    """
-    Ordena los artistas por nacimiento
-    """
-    orden = model.sortCantidades(catalog)
-    return orden
-
-def SortAños(catalog):
-    """
-    Ordena los artistas por nacimiento
-    """
-    orden = model.SortAños(catalog)
-    return orden
-
-def sortobras(catalog):
-    """
-    Ordena los artistas por nacimiento
-    """
-    orden = model.sortobras(catalog)
     return orden
 
 # Funciones de consulta sobre el catálogo
@@ -124,38 +101,10 @@ def primer_req(catalog, año1, año2):
     books = model.primer_req(catalog, año1, año2)
     return books
 
-def segundo_req(catalog, fecha_inicial, fecha_final):
+def obras_nacionaloidad(catalog,nacionalidad):
     """
     Retorna los libros que fueron publicados
     en un año
     """
-    books = model.segundo_req(catalog, fecha_inicial, fecha_final)
-    return books
-
-def tercer_req(catalog, artista):
-    """
-    Retorna los libros que fueron publicados
-    en un año
-    """
-    books = model.tercer_req(catalog, artista)
-    return books
-
-def quinto_req(catalog, departamento):
-    """
-    Retorna los libros que fueron publicados
-    en un año
-    """
-    books = model.quinto_req(catalog, departamento)
-    return books
-
-def cantidad_tecnicas(catalog):
-    tecnicas = model.cantidad_tecnicas(catalog)
-    return tecnicas
-
-def funcion_prueba_req3(catalog, artista):
-    """
-    Retorna los libros que fueron publicados
-    en un año
-    """
-    books = model.funcion_prueba_req3(catalog, artista)
+    books = model.obras_nacionaloidad(catalog,nacionalidad)
     return books

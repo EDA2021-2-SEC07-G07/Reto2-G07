@@ -20,16 +20,15 @@
  * along withthis program.  If not, see <http://www.gnu.org/licenses/>.
  """
 
+import time
 import config as cf
 import sys
 import controller
 from DISClib.ADT import list as lt
 assert cf
 from DISClib.ADT import map as mp
-from prettytable import PrettyTable
 from DISClib.DataStructures import mapentry as me
-from datetime import date
-import time
+
 """
 La vista se encarga de la interacción con el usuario
 Presenta el menu de opciones y por cada seleccion
@@ -53,105 +52,12 @@ def print_artistas(author):
     """
     Imprime la información del autor seleccionado
     """
-    if author == '':
-        print('No se encontraron artistas nacidos en el rango dado')
-    elif author:
-        print("\n")
-        x = PrettyTable(["Nombre", "Nacio", 'Murio','Nacionalidad','Genero'])
-        x._max_width = {"Nombre" : 20, "Nacio" : 20,"Murio" : 20, "Nacionalidad" : 20,"Genero" : 20}
-        for artistas in lt.iterator(author):
-            x.add_row([artistas['DisplayName']+'\n', artistas['BeginDate'], artistas['EndDate'],artistas['Nationality'],artistas['Gender']])
-        print(x)
-        print("\n")
-    else:
-        print('No se encontro el autor.\n')
-
-def print_obras(author):
-    """
-    Imprime la información del autor seleccionado
-    """
     if author:
         print("\n")
-        x = PrettyTable(["Titulo", "Fecha", 'Medio','Dimensiones'])
-        x._max_width = {"Titulo" : 30, "Fecha" : 30,"Medio" : 30, "Dimensiones" : 30}
         for artistas in lt.iterator(author):
-            if artistas['Medium'] == '':
-                tecnica = 'Unknown'
-            else: 
-                tecnica = artistas['Medium']
-            x.add_row([artistas['Title']+'\n', artistas['Date'],tecnica,artistas['Dimensions']])
-        print(x)
-        print("\n")
-    else:
-        print('No se encontro el autor.\n')
-
-def print_obrasyartistas(author):
-    """
-    Imprime la información del autor seleccionado
-    """
-    if author:
-        print("\n")
-        x = PrettyTable(["Titulo", 'Artistas',"Fecha", 'Medio','Dimensiones'])
-        x._max_width = {"Titulo" : 20, "Artistas" : 30,"Fecha" : 20,"Medio" : 20, "Dimensiones" : 20}
-        for artistas in lt.iterator(author):
-            codigosautores = artistas['ConstituentID'].replace("[","")
-            codigosautores = codigosautores.replace("]","")
-            codigosautores = codigosautores.split(",")
-            nombres = ''
-            for artista in codigosautores:
-                codigos = mp.get(cont['Artistas'],artista.strip())
-                nombres += me.getValue(codigos)['Nombre']
-            if artistas['Medium'] == '':
-                tecnica = 'Unknown'
-            else: 
-                tecnica = artistas['Medium']
-            x.add_row([artistas['Title']+'\n',nombres,artistas['DateAcquired'],tecnica,artistas['Dimensions']])
-        print(x)
-        print("\n")
-    else:
-        print('No se encontro el autor.\n')
-
-def print_tecnicas(author):
-    """
-    Imprime la información del autor seleccionado
-    """
-    if author:
-        print("\n")
-        x = PrettyTable(["Tecnica", "Cantidad"])
-        x._max_width = {"Tecnica" : 40, "Cantidad" : 40}
-        for artistas in lt.iterator(author):
-            if artistas['Tecnica'] == '':
-                tecnica = 'Unknown'
-            else: 
-                tecnica = artistas['Tecnica']
-            x.add_row([tecnica+'\n', artistas['Cantidad']])
-        print(x)
-        print("\n")
-    else:
-        print('No se encontro el autor.\n')
-
-def print_obras_especificos(author):
-    """
-    Imprime la información del autor seleccionado
-    """
-    if author:
-        print("\n")
-        x = PrettyTable(["Titulo", 'Artistas','clasificacion',"Fecha", 'Medio','Dimensiones','costo'])
-        x._max_width = {"Titulo" : 20, "Artistas" : 30,"clasificacion" : 20,"Fecha" : 20,"Medio" : 20, "Dimensiones" : 20,"costo" : 20}
-        for artistas in lt.iterator(author):
-            codigosautores = artistas['artistas'].replace("[","")
-            codigosautores = codigosautores.replace("]","")
-            codigosautores = codigosautores.split(",")
-            nombres = ''
-            for artista in codigosautores:
-                codigos = mp.get(cont['Artistas'],artista.strip())
-                nombres += me.getValue(codigos)['Nombre']
-            if artistas['tecnica'] == '':
-                tecnica = 'Unknown'
-            else: 
-                tecnica = artistas['tecnica']
-            x.add_row([artistas['titulo']+'\n',nombres,artistas['clasificacion'],artistas['fecha'],tecnica,artistas['dimensiones'],str(round(artistas['costo'],3))])
-        print(x)
+            print('Nombre: ' + artistas['DisplayName'] + '  Nacio: ' + artistas['BeginDate']+ 
+            '  Murio: ' + artistas['EndDate']+ '  Nacionalidad: ' + artistas['Nationality']
+            + '  Genero: ' + artistas['Gender'])
         print("\n")
     else:
         print('No se encontro el autor.\n')
@@ -159,11 +65,9 @@ def print_obras_especificos(author):
 def printMenu():
     print("Bienvenido")
     print("1- Cargar información en el catálogo")
-    print("2- Mostrar los tres primeros y los tres ultimos artistas, segun el orden cronologico de un rango de años")
-    print("3- Mostrar las tres primeras y las tres ultimas obras de arte, segun el orden cronologico de un rango de fechas")
-    print("4- Clasificacion de obras por tecnica, y algunso datos sobre la tecnica mas usada de un artista dado")
-    print("5- ")
-    print("6- Clasificacion de obras segund su nacionalidad, y datos imprtantes sobre esta la nacionalidad mas repetida")
+    print("2- Autores nacidos en un rango especififico")
+    print("3- obras de un nacionalidada especifica")
+    print("4- Obras por medio especifico")
     print("0- Salir")
 
 def initCatalog():
@@ -186,70 +90,46 @@ while True:
     printMenu()
     inputs = input('Seleccione una opción para continuar\n')
     if int(inputs[0]) == 1:
+        start_time = time.process_time()
         print("Cargando información de los archivos ....")
         cont = controller.initCatalog()
         controller.loadData(cont)
-
-    elif int(inputs[0]) == 2:
-        año1 = input("Porfavor escriba el primer año de su rango: ")
-        año2 = input("Porfavor escriba el ultimo año de su rango: ")
-        start_time = time.process_time()
-        respuesta = controller.primer_req(cont,año1,año2)
         stop_time = time.process_time()
         elapsed_time_mseg = (stop_time - start_time)*1000
-        print(('\n') +"El total de artistas nacidos en el rango es de: "+ ' ' + str(respuesta[3])+ '\n')
+        print(elapsed_time_mseg)
+
+    elif int(inputs[0]) == 2:
+        año1 = input("Buscando libros del año?: ")
+        año2 = input("Buscando libros del año?: ")
+        respuesta = controller.primer_req(cont,año1,año2)
         print(('-'*5) + "Estos son los 3 primeros artistas del rango dado"+ ('-'*5))
         print_artistas(respuesta[0])
         print(('-'*5) + "Estos son los 3 ultimos artistas del rango dado"+ ('-'*5))
         print_artistas(respuesta[1])
-        print(elapsed_time_mseg)
 
     elif int(inputs[0]) == 3:
         start_time = time.process_time()
-        fecha_inicial = input("Porfavor, dijite la fecha inicial en el formato AAAA/MM/DD del rango que desea buscar: ")
-        fecha_final = input("Porfavor, dijite la fecha final en el formato AAAA/MM/DD del rango que desea buscar: ")
-        respuesta = controller.segundo_req(cont,fecha_inicial,fecha_final)
-        print(('\n') +"El total de obras del rango dado es de: "+ ' ' + str(respuesta[2])+ '\n')
-        print(('\n') +"El total de obras que fueron compradas en el rango es de : "+ ' ' + str(respuesta[3])+ '\n')
-        print(('-'*5) + "Estos son los 3 primeras obras del rango dado"+ ('-'*5))
-        print_obrasyartistas(respuesta[0])
-        print(('-'*5) + "Estos son los 3 ultimas obras del rango dado"+ ('-'*5))
-        print_obrasyartistas(respuesta[1])
+        año2 = input("Escriba la nacionalidad que desea concoer as obras totales: ")
+        valores = controller.obras_nacionaloidad(cont,año2)
+        print('la cantidad de obras de esta nacionalidad es de: ' + str(valores))
         stop_time = time.process_time()
         elapsed_time_mseg = (stop_time - start_time)*1000
         print(elapsed_time_mseg)
 
-    
-    elif int(inputs[0]) == 4:
+    elif int(inputs[0]) ==4:
         start_time = time.process_time()
-        Artista = input("Porfavor, dijite el nombre del artista que desea buscar")
-        respuesta = controller.tercer_req(cont,Artista)
-        print(('\n') +"El total de obras de arte del artista es de: "+ ' ' + str(respuesta[2])+ '\n')
-        print(('\n') +"El total de tecnicas utilzadas por el artista es de: "+ ' ' + str(respuesta[3])+ '\n')
-        print(('\n') +"La tecnica mas utilizada por el artista fue : "+ ' ' + str(respuesta[4])+ '\n')
-        print_tecnicas(respuesta[1])
-        print_obras(respuesta[0])
+        tecnica_nombre = input("Nombre de la tecnica que quiere saber el total de obras: ")
+        tecnica_obras = controller.getBooksByAuthor(cont, tecnica_nombre)
+        print('Total de libros: ' + str(lt.size(tecnica_obras['obras'])))
+        cantidad = input("Numero de obras antiguas que desea ver: ")
+        if int(cantidad) > lt.size(tecnica_obras['obras']):
+            print("El numero es mayor al de la cantidad de obras de la tecnica")
+        else: 
+            ordenadas = controller.sortantiguas(tecnica_obras['obras'],int(cantidad))
+            print_obras_tecnica(ordenadas)
         stop_time = time.process_time()
         elapsed_time_mseg = (stop_time - start_time)*1000
         print(elapsed_time_mseg)
-
-    elif int(inputs[0]) == 5:
-        pass
-    elif int(inputs[0]) == 6:
-        start_time = time.process_time()
-        Departamento = input("Porfavor, dijite el deprtamento que desea conocer el costo del tranposrte")
-        respuesta = controller.quinto_req(cont,Departamento)
-        stop_time = time.process_time()
-        print(('\n') +"El total de obras a transportar es de: "+ ' ' + str(respuesta[4])+ '\n')
-        print((('\n') +"El total de costo de transporte es de : "+ ' ' + str(round(respuesta[2],2))+ '\n'))
-        print((('\n') +"El total de peso de las obras es de : "+ ' ' + str(round(respuesta[3],2))+ '\n'))
-        print(('-'*5) + "Estos son las 5 obras mas caras del departmento"+ ('-'*5))
-        print_obras_especificos(respuesta[0])
-        print(('-'*5) + "Estos son las 5 obras mas antiguas del departmento"+ ('-'*5))
-        print_obras_especificos(respuesta[1])
-        elapsed_time_mseg = (stop_time - start_time)*1000
-        print(elapsed_time_mseg)
-        
     else:
         sys.exit(0)
 sys.exit(0)
