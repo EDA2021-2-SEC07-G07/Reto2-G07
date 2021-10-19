@@ -163,7 +163,7 @@ def printMenu():
     print("3- Mostrar las tres primeras y las tres ultimas obras de arte, segun el orden cronologico de un rango de fechas")
     print("4- Clasificacion de obras por tecnica, y algunso datos sobre la tecnica mas usada de un artista dado")
     print("5- ")
-    print("6- Clasificacion de obras segund su nacionalidad, y datos imprtantes sobre esta la nacionalidad mas repetida")
+    print("6- Calculo del costo total de trasnporte de obras, segun departamento")
     print("0- Salir")
 
 def initCatalog():
