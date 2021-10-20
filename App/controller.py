@@ -159,3 +159,16 @@ def funcion_prueba_req3(catalog, artista):
     """
     books = model.funcion_prueba_req3(catalog, artista)
     return books
+
+
+def cuarto_req(catalogo):
+    orden = model.cuarto_req(catalogo)
+    return orden
+
+def cuarto_req_10Primeros(lista, catalogo):
+    top = model.cuarto_req_10Primeros(lista, catalogo)
+    return top
+
+def primeros_ultimos(lista, catalogo):
+    prim_ulti = model.primeros_ultimos(lista, catalogo)
+    return prim_ulti

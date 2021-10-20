@@ -91,6 +91,18 @@ def newCatalog():
                                    maptype='CHAINING',
                                    loadfactor=4.0,
                                    comparefunction=compareAuthorsByName)
+    catalog["Artistas_nacion"] = mp.newMap(150000,
+                                   maptype='CHAINING',
+                                   loadfactor=4.0)
+    catalog["Orden_naciones"] = mp.newMap(1000,
+                                   maptype='CHAINING',
+                                   loadfactor=4.0)
+    catalog["Naciones_cantidad"]= mp.newMap(1000,
+                                   maptype='CHAINING',
+                                   loadfactor=4.0)
+    catalog["Codigos_orden"]= mp.newMap(1000,
+                                   maptype='CHAINING',
+                                   loadfactor=4.0)
 
     return catalog
 
@@ -126,6 +138,7 @@ def addArtistas(catalog,book):
     mp.put(catalog['Artistas'], book['ConstituentID'], author)
     addBookYear(catalog, book)
     mp.put(catalog['Nombres_Artistas'], book['DisplayName'], book['ConstituentID'])
+    mp.put(catalog["Artistas_nacion"], book['ConstituentID'], book['Nationality'])
 
 def addBookYear(catalog, book):
     """
@@ -494,6 +507,10 @@ def comparacostos(artista1, artista2):
 def sortantiguasobras(catalog):
     orden = merge.sort(catalog, compareantiguasobras)
     return orden
+
+def comppaises(pais1, pais2):
+    return (int(pais1) > int(pais2))
+
 # Funciones de ordenamiento
 
 def sortantiguas(catalog,size):
@@ -542,6 +559,10 @@ def sortobras(catalog):
 
 def sortcostos(catalog):
     orden = merge.sort(catalog, comparacostos)
+    return orden
+
+def sortnaciones(lista):
+    orden = merge.sort(lista, comppaises)
     return orden
 
 #completas requerimientos
@@ -629,3 +650,96 @@ def quinto_req(catalog,departamento):
     orden_antiguas = sortantiguasobras(obras)
     ultimas_antiguas = obtener_antiguas(orden_antiguas)
     return primerascostosas,ultimas_antiguas,costo,peso,lt.size(obras)
+
+def cuarto_req(catalogo):
+
+    artistas = catalogo['Artistas_nacion']
+
+    #nueva = lt.newList('ARRAY_LIST')
+
+    libros = catalogo['books']
+    lt_naciones = lt.newList('ARRAY_LIST')
+    
+
+    for obra in lt.iterator(libros):
+        codigo_obra = obra["ObjectID"]
+        lt_codigos = lt.newList('ARRAY_LIST')
+
+        obras = obra['ConstituentID'].replace("[","")
+        obras = obras.replace("]","")
+        obras = obras.split(",")
+        for c in obras:
+            codigo = c.strip()
+            nacionalidad = me.getValue(mp.get(artistas, codigo))
+            if nacionalidad == "" or nacionalidad == "Nationality unknown":
+                nacionalidad = "Unknown"
+
+            estado = mp.contains(catalogo["Orden_naciones"], nacionalidad)
+            
+            if estado:
+                llave_valor = mp.get(catalogo["Orden_naciones"], nacionalidad)
+                suma = (me.getValue(llave_valor) + 1)
+                me.setValue(llave_valor, suma)
+
+                llave_valor2 = mp.get(catalogo["Codigos_orden"], nacionalidad)
+                lista = me.getValue(llave_valor2)
+                lt.addLast(lista, codigo_obra)
+                me.setValue(llave_valor2, lista)
+
+            else:
+                lt.addLast(lt_codigos, codigo_obra)
+                mp.put(catalogo["Orden_naciones"], nacionalidad, 1)
+                mp.put(catalogo["Codigos_orden"], nacionalidad, lt_codigos)
+                lt.addLast(lt_naciones, nacionalidad)
+
+
+    for pais in lt.iterator(lt_naciones):
+        llave_valor1 = mp.get(catalogo["Orden_naciones"], pais)
+        cantidad = me.getValue(llave_valor1)
+        mp.put(catalogo["Naciones_cantidad"], cantidad, pais)
+
+    llaves = mp.keySet(catalogo["Naciones_cantidad"])
+    orden = sortnaciones(llaves)
+    
+    return orden,catalogo["Codigos_orden"]
+    
+def cuarto_req_10Primeros(lista,catalogo):
+
+    primeros_10_nomb = lt.newList('ARRAY_LIST')
+    primeros_10_valor = lt.newList('ARRAY_LIST')
+    comp = 10
+    for numero in lt.iterator(lista):
+        pais = me.getValue(mp.get(catalogo["Naciones_cantidad"], numero))
+        lt.addLast(primeros_10_nomb, pais)
+        lt.addLast(primeros_10_valor, numero)
+
+        if comp == 1:
+            break
+        comp -= 1
+
+    return primeros_10_nomb,primeros_10_valor
+
+def primeros_ultimos(lista_nombres, catalogo):
+
+    pais_mayor = lt.getElement(lista_nombres, 1)
+    codigos_paises = catalogo["Codigos_orden"]
+    codigos_mayor = me.getValue(mp.get(codigos_paises, pais_mayor))
+
+    primeros = lt.subList(codigos_mayor, 1, 3)
+    ultimos = lt.subList(codigos_mayor, int(lt.size(codigos_mayor)-2), 3)
+
+    primeros_3 = lt.newList('ARRAY_LIST')
+    ultimos_3 = lt.newList('ARRAY_LIST')
+
+
+    for pri in lt.iterator(primeros):
+        for obras in lt.iterator(catalogo["books"]):
+            if pri == obras["ObjectID"]:
+                lt.addLast(primeros_3, obras)
+
+    for ult in lt.iterator(ultimos):
+        for obras in lt.iterator(catalogo["books"]):
+            if ult == obras["ObjectID"]:
+                lt.addLast(ultimos_3, obras)
+        
+    return primeros_3, ultimos_3
