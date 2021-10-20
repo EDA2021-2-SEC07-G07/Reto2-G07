@@ -230,7 +230,7 @@ while True:
         print(('\n') +"El total de tecnicas utilzadas por el artista es de: "+ ' ' + str(respuesta[3])+ '\n')
         print(('\n') +"La tecnica mas utilizada por el artista fue : "+ ' ' + str(respuesta[4])+ '\n')
         print_tecnicas(respuesta[1])
-        print(('\n') +"Esta es una muestra de 10 obras de la tecnica mas utilizada : "+ ' ' + '\n')
+        print(('\n') +"Esta es una muestra de las obras de la tecnica mas utilizada : "+ ' ' + '\n')
         print_obras(respuesta[0])
         stop_time = time.process_time()
         elapsed_time_mseg = (stop_time - start_time)*1000
